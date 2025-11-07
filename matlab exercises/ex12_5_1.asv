@@ -1,0 +1,42 @@
+% Create a family of Morlet wavelets ranging in frequency from 2 Hz to 30
+% Hz in five steps.
+
+
+
+for n = freq
+    [psi,x] = morlet(lb,ub,n);
+end
+
+% Parameters
+fs = 1000;                % sampling rate (Hz)
+dur = 2;                  % wavelet duration (s) -> +/- dur/2 around 0
+t = -dur/2 : 1/fs : dur/2;
+freqs = linspace(2,30,5); % 5 frequencies from 2 to 30 Hz
+nCycles = 6;              % number of cycles (controls time-frequency tradeoff)
+
+% Preallocate
+wavelets = cell(length(freqs),1);
+
+figure('Units','normalized','Position',[0.05 0.05 0.9 0.8]);
+for k = 1:length(freqs)
+    f = freqs(k);
+    % Gaussian sigma in seconds for given number of cycles:
+    sigma_t = nCycles / (2*pi*f);
+    % Complex Morlet (unnormalized)
+    morlet = exp(2i*pi*f.*t) .* exp(-t.^2 ./ (2*sigma_t^2));
+    % Normalize to unit energy (sum(|w|^2) = 1)
+    morlet = morlet ./ sqrt(sum(abs(morlet).^2));
+    wavelets{k} = morlet;
+    
+    % Plot real part and magnitude
+    subplot(length(freqs),2,2*(k-1)+1);
+    plot(t, real(morlet));
+    xlabel('Time (s)'); ylabel('Real part'); title(sprintf('f = %.1f Hz (real)', f));
+    grid on; xlim([-0.5 0.5]);
+    
+    subplot(length(freqs),2,2*(k-1)+2);
+    plot(t, abs(morlet));
+    xlabel('Time (s)'); ylabel('Magnitude'); title(sprintf('f = %.1f Hz (magnitude)', f));
+    grid on; xlim([-0.5 0.5]);
+end
+sgtitle(sprintf('Morlet wavelet family (nCycles = %d)', nCycles));
